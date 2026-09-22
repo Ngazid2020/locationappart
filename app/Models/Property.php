@@ -14,9 +14,18 @@ class Property extends Model
         'name',
         'slug',
         'short_description',
+        'description',
         'base_price',
+        'max_guests',
+        'bedrooms',
+        'bathrooms',
         'main_image',
         'images',
+        'amenities',
+        'address',
+        'city',
+        'latitude',
+        'longitude',
         'is_active',
     ];
 
@@ -25,7 +34,10 @@ class Property extends Model
         return [
             'base_price' => 'decimal:2',
             'images'     => 'array',
+            'amenities'  => 'array',
             'is_active'  => 'boolean',
+            'latitude'   => 'decimal:7',
+            'longitude'  => 'decimal:7',
         ];
     }
 
@@ -39,6 +51,9 @@ class Property extends Model
             }
             if (empty($property->images)) {
                 $property->images = [];
+            }
+            if (empty($property->amenities)) {
+                $property->amenities = [];
             }
         });
 
@@ -54,14 +69,10 @@ class Property extends Model
         return $query->where('is_active', true);
     }
 
-    /**
-     * Récupère toutes les images (principale + galerie) pour le frontend.
-     */
     public function getAllImages(): array
     {
         $images = $this->images ?? [];
         
-        // Si les images sont stockées au format Repeater [{url: '...'}, ...]
         if (isset($images[0]) && is_array($images[0]) && isset($images[0]['url'])) {
             $images = array_column($images, 'url');
         }
@@ -71,5 +82,17 @@ class Property extends Model
         }
         
         return array_filter($images);
+    }
+
+    /**
+     * Calcule le prix total pour une période donnée
+     */
+    public function calculateTotalPrice(string $checkIn, string $checkOut): float
+    {
+        $start = \Carbon\Carbon::parse($checkIn);
+        $end = \Carbon\Carbon::parse($checkOut);
+        $nights = $start->diffInDays($end);
+        
+        return (float) $this->base_price * $nights;
     }
 }
