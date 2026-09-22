@@ -9,7 +9,7 @@
             <!-- Image principale -->
             <div class="relative aspect-[16/10] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-soft bg-gray-200">
                 <img
-                    src="{{ asset('storage/' . $images[$currentIndex]) }}"
+                    src="{{ str_starts_with($images[$currentIndex], 'http') ? $images[$currentIndex] : asset('storage/' . $images[$currentIndex]) }}"
                     alt="Vue {{ $currentIndex + 1 }}"
                     class="w-full h-full object-cover transition-opacity duration-500"
                     wire:key="image-{{ $currentIndex }}">
@@ -47,7 +47,7 @@
                     wire:click="goTo({{ $index }})"
                     class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all duration-200 {{ $index === $currentIndex ? 'border-primary-500 ring-2 ring-primary-200' : 'border-transparent hover:border-primary-300' }}">
                     <img
-                        src="{{ asset('storage/' . $image) }}"
+                        src="{{ str_starts_with($image, 'http') ? $image : asset('storage/' . $image) }}"
                         alt="Miniature {{ $index + 1 }}"
                         class="w-full h-full object-cover">
                 </button>

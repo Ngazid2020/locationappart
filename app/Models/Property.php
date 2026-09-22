@@ -24,7 +24,7 @@ class Property extends Model
     {
         return [
             'base_price' => 'decimal:2',
-            'images'     => 'array', // Cast automatique JSON vers tableau PHP
+            'images'     => 'array',
             'is_active'  => 'boolean',
         ];
     }
@@ -55,14 +55,21 @@ class Property extends Model
     }
 
     /**
-     * Obtient toutes les images (principale + galerie)
+     * Récupère toutes les images (principale + galerie) pour le frontend.
      */
     public function getAllImages(): array
     {
         $images = $this->images ?? [];
+        
+        // Si les images sont stockées au format Repeater [{url: '...'}, ...]
+        if (isset($images[0]) && is_array($images[0]) && isset($images[0]['url'])) {
+            $images = array_column($images, 'url');
+        }
+        
         if ($this->main_image) {
             array_unshift($images, $this->main_image);
         }
-        return array_filter($images); // Retire les valeurs null/vides
+        
+        return array_filter($images);
     }
 }
