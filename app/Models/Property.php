@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Property extends Model
@@ -72,15 +73,15 @@ class Property extends Model
     public function getAllImages(): array
     {
         $images = $this->images ?? [];
-        
+
         if (isset($images[0]) && is_array($images[0]) && isset($images[0]['url'])) {
             $images = array_column($images, 'url');
         }
-        
+
         if ($this->main_image) {
             array_unshift($images, $this->main_image);
         }
-        
+
         return array_filter($images);
     }
 
@@ -92,7 +93,45 @@ class Property extends Model
         $start = \Carbon\Carbon::parse($checkIn);
         $end = \Carbon\Carbon::parse($checkOut);
         $nights = $start->diffInDays($end);
-        
+
         return (float) $this->base_price * $nights;
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Vérifie si la propriété est disponible pour une période donnée
+     */
+    public function isAvailable(string $checkIn, string $checkOut): bool
+    {
+        return !$this->bookings()
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($query) use ($checkIn, $checkOut) {
+                // Chevauchement de dates
+                $query->where(function ($q) use ($checkIn, $checkOut) {
+                    $q->where('check_in', '<=', $checkOut)
+                        ->where('check_out', '>', $checkIn);
+                });
+            })
+            ->exists();
+    }
+
+    /**
+     * Récupère les réservations qui entrent en conflit avec une période
+     */
+    public function getConflictingBookings(string $checkIn, string $checkOut)
+    {
+        return $this->bookings()
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($query) use ($checkIn, $checkOut) {
+                $query->where(function ($q) use ($checkIn, $checkOut) {
+                    $q->where('check_in', '<=', $checkOut)
+                        ->where('check_out', '>', $checkIn);
+                });
+            })
+            ->get();
     }
 }
