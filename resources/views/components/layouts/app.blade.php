@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,10 +15,11 @@
 
     <!-- Fonts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Alpine.js pour les interactions légères (ex: menu mobile) -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
+
 <body class="font-sans text-gray-800 bg-primary-50 antialiased">
 
     <!-- Header Simplifié -->
@@ -30,12 +32,12 @@
                         VotreRésidence
                     </a>
                 </div>
-                
+
                 <!-- Navigation (À enrichir plus tard) -->
                 <nav class="hidden md:flex space-x-8">
                     <a href="/" class="text-gray-600 hover:text-primary-700 font-medium transition-colors">Accueil</a>
-                    <a href="#about" class="text-gray-600 hover:text-primary-700 font-medium transition-colors">La Propriété</a>
-                    <a href="#contact" class="text-gray-600 hover:text-primary-700 font-medium transition-colors">Contact</a>
+                    <a href="/#about" class="text-gray-600 hover:text-primary-700 font-medium transition-colors">La Propriété</a>
+                    <a href="/#contact" class="text-gray-600 hover:text-primary-700 font-medium transition-colors">Contact</a>
                 </nav>
 
                 <!-- CTA Header -->
@@ -62,4 +64,5 @@
     </footer>
 
 </body>
+
 </html>

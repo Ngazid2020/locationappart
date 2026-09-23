@@ -14,52 +14,36 @@ class PropertyShow extends Component
     public float $totalPrice = 0;
     public array $galleryImages = [];
     public bool $isAvailable = true;
-public string $availabilityMessage = '';
+    public string $availabilityMessage = '';
 
     public function mount(string $slug): void
     {
         $this->property = Property::where('slug', $slug)->where('is_active', true)->firstOrFail();
         $this->galleryImages = $this->property->getAllImages();
         $this->guests = min(2, $this->property->max_guests);
+
+        // Récupérer les dates depuis l'URL (provenant de la page d'accueil)
+        if (request()->has('checkIn')) {
+            $this->checkIn = request()->query('checkIn');
+        }
+        if (request()->has('checkOut')) {
+            $this->checkOut = request()->query('checkOut');
+        }
+        if (request()->has('guests')) {
+            $this->guests = (int) request()->query('guests');
+        }
+
+        // Calculer le prix si les dates sont présentes
+        if ($this->checkIn && $this->checkOut) {
+            try {
+                $this->totalPrice = $this->property->calculateTotalPrice($this->checkIn, $this->checkOut);
+                $this->isAvailable = $this->property->isAvailable($this->checkIn, $this->checkOut);
+            } catch (\Exception $e) {
+                $this->totalPrice = 0;
+            }
+        }
     }
 
-    // public function updated(string $propertyName): void
-    // {
-    //     $this->validateOnly($propertyName, [
-    //         'checkIn' => 'required|date|after_or_equal:today',
-    //         'checkOut' => 'required|date|after:checkIn',
-    //         'guests'  => 'required|integer|min:1|max:' . ($this->property?->max_guests ?? 10),
-    //     ]);
-
-    //     // Recalculer le prix si les deux dates sont valides
-    //     if ($this->checkIn && $this->checkOut && $this->property) {
-    //         try {
-    //             $this->totalPrice = $this->property->calculateTotalPrice($this->checkIn, $this->checkOut);
-    //         } catch (\Exception $e) {
-    //             $this->totalPrice = 0;
-    //         }
-    //     }
-    // }
-
-    // public function requestBooking(): void
-    // {
-    //     $this->validate([
-    //         'checkIn' => 'required|date|after_or_equal:today',
-    //         'checkOut' => 'required|date|after:checkIn',
-    //         'guests'  => 'required|integer|min:1|max:' . $this->property->max_guests,
-    //     ]);
-
-    //     session()->flash('booking_request', [
-    //         'property' => $this->property->name,
-    //         'checkIn'  => $this->checkIn,
-    //         'checkOut' => $this->checkOut,
-    //         'guests'   => $this->guests,
-    //         'total'    => $this->totalPrice,
-    //     ]);
-
-    //     // Redirection vers une future page de confirmation
-    //     // $this->redirectRoute('booking.create', [...]);
-    // }
 
     public function render()
     {

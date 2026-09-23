@@ -18,3 +18,29 @@
   /* Ombres douces */
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
+
+/* Animations personnalisées */
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fade-in 1s ease-out;
+}
+
+/* Smooth scroll pour les ancres */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Effet parallax subtil sur le hero */
+.bg-fixed {
+    background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+    .bg-fixed {
+        background-attachment: scroll;
+    }
+}

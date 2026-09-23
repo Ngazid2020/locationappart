@@ -15,20 +15,19 @@ class HomePage extends Component
 
     public function mount(): void
     {
-        // Récupère la première propriété active pour l'affichage initial
         $this->property = Property::where('is_active', true)->first();
         if ($this->property) {
             $this->galleryImages = $this->property->getAllImages();
+            $this->guests = min(2, $this->property->max_guests);
         }
     }
 
-    // Validation en temps réel pour une UX réactive (Livewire 3)
     public function updated(string $propertyName): void
     {
         $this->validateOnly($propertyName, [
             'checkIn' => 'required|date|after_or_equal:today',
             'checkOut' => 'required|date|after:checkIn',
-            'guests' => 'required|integer|min:1|max:10',
+            'guests'  => 'required|integer|min:1|max:' . ($this->property?->max_guests ?? 10),
         ]);
     }
 
@@ -37,18 +36,24 @@ class HomePage extends Component
         $validated = $this->validate([
             'checkIn' => 'required|date|after_or_equal:today',
             'checkOut' => 'required|date|after:checkIn',
-            'guests' => 'required|integer|min:1|max:10',
+            'guests'  => 'required|integer|min:1|max:' . ($this->property->max_guests ?? 10),
         ]);
 
-        // Simulation d'action : affichage d'un message flash (sera remplacé par une redirection vers le processus de réservation)
-        session()->flash('message', "Recherche de disponibilité pour {$validated['guests']} voyageurs, du {$validated['checkIn']} au {$validated['checkOut']}.");
+        // Redirection vers la page de détail avec les dates en paramètres
+        $this->redirectRoute('property.show', [
+            'slug'    => $this->property->slug,
+            'checkIn' => $validated['checkIn'],
+            'checkOut' => $validated['checkOut'],
+            'guests'  => $validated['guests'],
+        ]);
     }
 
     public function render()
     {
-        // On applique directement le layout ici pour éviter de le répéter dans la vue
         return view('livewire.home-page', [
             'galleryImages' => $this->galleryImages
-        ])->layout('components.layouts.app');
+        ])->layout('components.layouts.app', [
+            'title' => $this->property?->name ?? 'Accueil'
+        ]);
     }
 }
