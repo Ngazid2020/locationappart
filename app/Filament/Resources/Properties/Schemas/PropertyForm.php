@@ -138,7 +138,7 @@ class PropertyForm
                             ->disk('public')
                             ->image()
                             ->imageEditor()
-                            ->maxSize(7320)
+                            ->maxSize(10320)
                             ->required()
                             ->columnSpanFull(),
 
@@ -151,7 +151,7 @@ class PropertyForm
                                     ->disk('public')
                                     ->image()
                                     ->imageEditor()
-                                    ->maxSize(7320)
+                                    ->maxSize(10320)
                                     ->required(),
                             ])
                             ->collapsible()
