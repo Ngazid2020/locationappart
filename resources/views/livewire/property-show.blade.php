@@ -138,13 +138,20 @@
                             </select>
                         </div>
 
-                        @if ($totalPrice > 0)
-                        <div class="space-y-2 py-4 border-t border-gray-200">
+                        @if ($totalPrice > 0 && $nights > 0)
+                        <div class="space-y-3 py-4 border-t border-gray-200">
                             <div class="flex justify-between text-gray-700">
-                                <span>{{ number_format($property->base_price, 0, ',', ' ') }} € x <span id="nights-count"></span> nuits</span>
+                                <span>{{ number_format($property->base_price, 0, ',', ' ') }} € x {{ $nights }} nuit{{ $nights > 1 ? 's' : '' }}</span>
                                 <span>{{ number_format($totalPrice, 0, ',', ' ') }} €</span>
                             </div>
-                            <div class="flex justify-between font-bold text-lg text-primary-900 pt-2 border-t border-gray-200">
+
+                            <!-- Optionnel : Ajouter les frais de service si vous en avez -->
+                            <!-- <div class="flex justify-between text-gray-700">
+        <span>Frais de service</span>
+        <span>0 €</span>
+    </div> -->
+
+                            <div class="flex justify-between font-bold text-lg text-primary-900 pt-3 border-t border-gray-200">
                                 <span>Total</span>
                                 <span>{{ number_format($totalPrice, 0, ',', ' ') }} €</span>
                             </div>

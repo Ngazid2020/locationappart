@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Property;
 use Livewire\Component;
+use Carbon\Carbon;
 
 class PropertyShow extends Component
 {
@@ -12,6 +13,7 @@ class PropertyShow extends Component
     public string $checkOut = '';
     public int $guests = 2;
     public float $totalPrice = 0;
+    public int $nights = 0; // <-- AJOUT : Propriété pour le nombre de nuits
     public array $galleryImages = [];
     public bool $isAvailable = true;
     public string $availabilityMessage = '';
@@ -22,34 +24,14 @@ class PropertyShow extends Component
         $this->galleryImages = $this->property->getAllImages();
         $this->guests = min(2, $this->property->max_guests);
 
-        // Récupérer les dates depuis l'URL (provenant de la page d'accueil)
-        if (request()->has('checkIn')) {
-            $this->checkIn = request()->query('checkIn');
-        }
-        if (request()->has('checkOut')) {
-            $this->checkOut = request()->query('checkOut');
-        }
-        if (request()->has('guests')) {
-            $this->guests = (int) request()->query('guests');
-        }
+        if (request()->has('checkIn')) $this->checkIn = request()->query('checkIn');
+        if (request()->has('checkOut')) $this->checkOut = request()->query('checkOut');
+        if (request()->has('guests')) $this->guests = (int) request()->query('guests');
 
-        // Calculer le prix si les dates sont présentes
+        // Calculer le prix et les nuits si les dates sont présentes
         if ($this->checkIn && $this->checkOut) {
-            try {
-                $this->totalPrice = $this->property->calculateTotalPrice($this->checkIn, $this->checkOut);
-                $this->isAvailable = $this->property->isAvailable($this->checkIn, $this->checkOut);
-            } catch (\Exception $e) {
-                $this->totalPrice = 0;
-            }
+            $this->calculatePricing();
         }
-    }
-
-
-    public function render()
-    {
-        return view('livewire.property-show')->layout('components.layouts.app', [
-            'title' => $this->property?->name,
-        ]);
     }
 
     public function updated(string $propertyName): void
@@ -61,21 +43,32 @@ class PropertyShow extends Component
         ]);
 
         if ($this->checkIn && $this->checkOut && $this->property) {
-            try {
-                // Calculer le prix
-                $this->totalPrice = $this->property->calculateTotalPrice($this->checkIn, $this->checkOut);
+            $this->calculatePricing();
+        }
+    }
 
-                // Vérifier la disponibilité
-                $this->isAvailable = $this->property->isAvailable($this->checkIn, $this->checkOut);
+    /**
+     * Méthode centralisée pour calculer les nuits, le prix et la disponibilité
+     */
+    private function calculatePricing(): void
+    {
+        try {
+            $start = Carbon::parse($this->checkIn);
+            $end = Carbon::parse($this->checkOut);
+            
+            // Calcul du nombre de nuits
+            $this->nights = $start->diffInDays($end);
 
-                if (!$this->isAvailable) {
-                    $this->availabilityMessage = 'Désolé, cette période n\'est plus disponible.';
-                } else {
-                    $this->availabilityMessage = '';
-                }
-            } catch (\Exception $e) {
-                $this->totalPrice = 0;
-            }
+            // Calcul du prix
+            $this->totalPrice = $this->property->calculateTotalPrice($this->checkIn, $this->checkOut);
+            
+            // Vérification de la disponibilité
+            $this->isAvailable = $this->property->isAvailable($this->checkIn, $this->checkOut);
+            $this->availabilityMessage = $this->isAvailable ? '' : 'Désolé, cette période n\'est plus disponible.';
+            
+        } catch (\Exception $e) {
+            $this->totalPrice = 0;
+            $this->nights = 0;
         }
     }
 
@@ -87,13 +80,11 @@ class PropertyShow extends Component
             'guests'  => 'required|integer|min:1|max:' . $this->property->max_guests,
         ]);
 
-        // Vérifier la disponibilité une dernière fois
         if (!$this->property->isAvailable($this->checkIn, $this->checkOut)) {
             $this->addError('checkIn', 'Cette période n\'est malheureusement plus disponible.');
             return;
         }
 
-        // Créer la réservation
         $booking = $this->property->bookings()->create([
             'guest_name'  => auth()->user()?->name ?? 'Client',
             'guest_email' => auth()->user()?->email ?? 'client@email.com',
@@ -111,6 +102,13 @@ class PropertyShow extends Component
             'guests'   => $this->guests,
             'total'    => $this->totalPrice,
             'id'       => $booking->id,
+        ]);
+    }
+
+    public function render()
+    {
+        return view('livewire.property-show')->layout('components.layouts.app', [
+            'title' => $this->property?->name,
         ]);
     }
 }
